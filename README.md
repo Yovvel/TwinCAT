@@ -5,7 +5,7 @@ I had a difficult time figuring out how to use TwinCAT motion the first time. I'
 
 The first step to use any of the motion control tools in a PLC program is to import the `Tc2_MC2 module`. Importing the `Tc2_MC2` module will give you access to many of the basic axis motion controls such as `MC_MoveAbsolute`, `MC_MoveRelative`, and `MC_MoveModulo`.
 
-To import the `Tc2_MC2 module`, go into the `Solution Explorer` and scroll down to the `PLC` section. Expand the `PLC` section and look for the `References` tab. Right click the `References` tab and select `Add library...`, then type "MC2" into the search box. Find the `Tc2_MC2` option, select it and hit `OK`.
+To import the `Tc2_MC2 module`, go into the `Solution Explorer` and scroll down to the `PLC` section. Expand the `PLC` section and look for the `References` tab. Right click the `References` tab and select `Add library...`, then type "MC2" into the search box. Find the `Tc2_MC2` module, select it and hit `OK`.
 
 To control an axis from within a POU (Program Organizational Unit), you need to declare instances of the function blocks you'd like to use in the variable editor. The basic function blocks that you will need are `AXIS_REF`, `MC_Power`, `MC_Stop`, `MC_Reset`, and one of the various `MC_<MotionType>` blocks.
 
@@ -23,17 +23,21 @@ TYPE ExampleStates :
 );
 END_TYPE
 ```
-I'm going to create three states for this example: ExampleInit, ExampleOff, and ExampleOn. After adding those three states, my ExampleStates Enumeration looks like this:
+I'm going to have three states for this example: ExampleInit, ExampleOff, and ExampleOn. After adding those three states, my ExampleStates Enumeration looks like this:
 ```
 TYPE ExampleStates :
 ( ExampleInit := 0, ExampleOff := 1, ExampleOn := 2 ); //condensed to save space
 END_TYPE
 ```
 
-Now that we've defined our states, lets get back to our POU. We need to include an instance of our `ExampleStates` Enumeration. So, lets add `CurrentState : ExampleStates := ExampleInit;` to the variable declaration section. 
-
-
-
+Now that we've defined our states, lets get back to our POU. We need to include an instance of our `ExampleStates` Enumeration. So, lets add `CurrentState : ExampleStates := ExampleInit;` to the variable declaration section. `MAIN` should look something like this now:
+```
+PROGRAM MAIN
+VAR
+	ExampleAxis 	: AXIS_REF;
+	CurrentState 	: ExampleStates := ExampleInit;
+END_VAR
+```
 
 
 
