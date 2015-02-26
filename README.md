@@ -3,13 +3,13 @@ This document is a guide to get you from zero to something using TwinCAT 3.
 
 I had a difficult time figuring out how to use TwinCAT motion the first time. I'll try to save you some trouble by writing a short(?) walkthrough. Please let me know if something is unclear or incorrect, I'm also relatively new to this software but I'm always willing to learn from and fix my mistakes.
 
-## The Setup
+## The Setup - Tc2_MC2
 
-To control an axis from within a POU (Program Organizational Unit), we need to declare instances of the function blocks we'd like to use in the variable editor. The basic function blocks that we will need are `AXIS_REF`, `MC_Power`, `MC_Stop`, `MC_Reset`, and one of the various `MC_<*Motion*>` blocks.
+To control an axis from within a POU (Program Organizational Unit), we need to declare instances of the function blocks we'd like to use in the variable editor. The basic function blocks that we will need are `AXIS_REF`, `MC_Power`, `MC_Stop`, `MC_Reset`, and one of the various `MC_<Motion>` blocks.
 
-The first step to use any of the motion control tools in a PLC program is to import the `Tc2_MC2 module`. Importing the `Tc2_MC2` module will give us access to all of the function blocks mentioned above and then some.
+The first step to use any of the motion control tools in a PLC program is to import the `Tc2_MC2` library. Importing the `Tc2_MC2` library will give us access to all of the function blocks mentioned above and then some.
 
-To import the `Tc2_MC2 module`, go into the `Solution Explorer` and scroll down to the `PLC` section. Expand the `PLC` section and look for the `References` tab. Right click the `References` tab and select `Add library...`, then type "MC2" into the search box. Find the `Tc2_MC2` module, select it and hit `OK`. Now that we've taken care of the dependencies, we can move on to the program itself.
+To import the `Tc2_MC2 library`, go into the `Solution Explorer` and scroll down to the `PLC` section. Expand the `PLC` section and look for the `References` tab. Right click the `References` tab and select `Add library...`, then type "MC2" into the search box. Find the `Tc2_MC2` library, select it and hit `OK`. Now that we've taken care of the dependencies, we can move on to the program itself.
 
 ## Making A New Project
 
@@ -52,8 +52,6 @@ ExAxName.ReadStatus();
 
 For more information on the `AXIS_REF` function block, navigate through the [maze][2] and find the [AXIS_REF][1] document.
 
-
-
 ### MC_Power
 
 Now that we have a link to our axis, let's enable our axis.
@@ -74,19 +72,67 @@ For more information on the `MC_Power` function block, navigate through the [maz
 
 ### MC_Stop
 
-############################(INCOMPLETE)
+Once we have our axis going, we will need a method to stop it, and the `MC_Stop` function block will do just that. 
 
+Activating the `MC_Stop` function block decelerates our axis to a stop. This is a necessity for any application, so let's add it to our program. We'll call our instance `ExAxStop`. To declare our instance of `MC_Stop`, we add `ExAxStop : MC_Stop` into the Variable Declaration Window.
+
+At this point, our Variable Declaration Window should look something like this:
+
+```
+PROGRAM MAIN
+VAR
+	ExampleAxisName : AXIS_REF;
+	ExAxPower : MC_Power;
+	ExAxStop : MC_Stop;
+END_VAR
+```
+
+For more information on the `MC_Stop` function block, navigate through the [maze][2] and find the [MC_Stop][6] document.
 
 ### MC_Reset
 
-############################(INCOMPLETE)
+When our axis encounters an error, and that's a guarantee, we will need to reset our axis to resume operation.
+
+To reset our axis, we'll need to implement the `MC_Reset` function block. Let's call our instance `ExAxReset`. To declare our instance, we add `ExAxReset : MC_Reset` to our program.
+
+At this point, our Variable Declaration Window should look something like this:
+
+```
+PROGRAM MAIN
+VAR
+	ExampleAxisName : AXIS_REF;
+	ExAxPower : MC_Power;
+	ExAxStop : MC_Stop;
+	ExAxReset : MC_Reset;
+END_VAR
+```
+
+For more information on the `MC_Reset` function block, navigate through the [maze][2] and find the [MC_Reset][7] document.
 
 ### MC_<*Motion*>
 
-############################(INCOMPLETE)
+Now that we have all of our preliminary functions in place, let's get moving.
 
-Our axis is now ready to move. Before we can start moving, we need to settle on a <*Motion*> function block. There are a [variety][4] of <*Motion*> function blocks available for use. I've only ever used [Point To Point Motion][5], so we will cover those.
+Before we can start moving, we need to settle on a <*Motion*> function block. There are a [variety][4] of <*Motion*> function blocks available for use. I've only ever used [Point To Point Motion][5], so we will cover those.
 
+The specific type of <*Motion*> block we will use depends on the particular application. In the case of a continuous motion axis, such as a DC Motor or Servo Motor, we can use the `MC_MoveVelocity` to control the velocity of rotation. If we need precise positional control, we can use any of `MC_MoveAbsolute`, `MC_MoveRelative`, `MC_MoveAdditive`, or `MC_MoveModulo`. Each of the positioning function blocks is situational, so we can use whatever works best with our hardware.
+
+For now, let's imagine we're working with a simple DC Motor + Encoder. DC motors are typically used in situations where positional control is less relevant then velocity modulation, so we'll implement the `MC_MoveVelocity` function block. Let's name our new function block `ExAxMvVelo`, and declare it by adding `ExAxMvVelo : MC_MoveVelocity` to our Variable Declaration Window.
+
+Our Variable Declaration Window should look something like this:
+
+```
+PROGRAM MAIN
+VAR
+	ExampleAxisName : AXIS_REF;
+	ExAxPower : MC_Power;
+	ExAxStop : MC_Stop;
+	ExAxReset : MC_Reset;
+	ExAxMvVelo : MC_MoveVelocity;
+END_VAR
+```
+
+For more information on any of the PTP Motion function blocks, navigate through the [maze][2] and find the [point to point motion folder][5].
 
 ## The State Machine 
 ############################(INCOMPLETE)
@@ -129,4 +175,5 @@ Swaglinks
 [3]:http://infosys.beckhoff.com/content/1033/tcplclib_tc2_mc2/70049419.html?id=14201
 [4]:http://infosys.beckhoff.com/content/1033/tcplclib_tc2_mc2/70091915.html?id=14229
 [5]:http://infosys.beckhoff.com/content/1033/tcplclib_tc2_mc2/70093323.html?id=14230
-
+[6]:http://infosys.beckhoff.com/content/1033/tcplclib_tc2_mc2/70108555.html
+[7]:http://infosys.beckhoff.com/content/1033/tcplclib_tc2_mc2/70050955.html?id=14202
