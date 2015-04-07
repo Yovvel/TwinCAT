@@ -265,7 +265,7 @@ Now, we can add our skeleton state machine to the code window.
 Our code window should look like this:
 
 ```
-CASE CurrentState OF
+CASE State OF
 	0:
 		//CODE GOES HERE
 	1:
