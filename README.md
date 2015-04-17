@@ -282,7 +282,147 @@ Now that we have a state machine skeleton, let's fill in our actual program and 
 
 ## Let's Get Moving
 
+At this point, our `MAIN` should look like this:
 
+Variable Declaration:
+```
+PROGRAM MAIN
+VAR
+	ExampleAxisName : AXIS_REF;
+	ExAxPower 		: MC_Power;
+	ExAxStop 		: MC_Stop;
+	ExAxReset 		: MC_Reset;
+	ExAxMvVelo 		: MC_MoveVelocity;
+	State			: INT := 0;
+END_VAR
+```
+
+Code:
+```
+CASE State OF
+	0:
+		//CODE GOES HERE
+	1:
+		//CODE GOES HERE
+	2:
+		//CODE GOES HERE
+	ELSE
+		//CODE GOES HERE
+END_CASE
+```
+
+The first step to moving an actual piece of hardware is to call the AXIS_REF function `ReadStatus()`. `ReadStatus` will communicate with the hardware and update the local variables in our program.
+We should call `ReadStatus` once per cycle, regardless of what state our machine is in so we will put it outside our `CASE` statement.
+
+The next step is to fill in our state machine.
+We will begin by powering on our axis.
+To power our axis, we use:
+
+```
+ExAxPower.Enable := TRUE; 
+ExAxPower.Enable_Positive := TRUE;
+ExAxPower.Enable_Negative := TRUE;
+```
+
+We should then transition to an intermediate step and ensure that our axis is activated by checking the MC_Power `active` flag.
+At this step we should also check for errors by looking at the `error` flag.
+If either flag is read, the state machine should transition to the appropriate state.
+In my example, I will omit error checking for brevity.
+
+Another key factor to note is that no changes will take effect until ExAxPower FB is called.
+Regardless of what state our machine is in, we should call each FB once per cycle.
+The MC_Motion function block calls are generally of the form `ExAxFB(Axis := ExampleAxisName);`.
+
+After adding the code from above, our state machine should look like this:
+
+```
+//update local variables from hardware
+ExampleAxisName.ReadStatus();
+
+CASE State OF
+	0:	//power activation
+		ExAxPower.Enable := TRUE; 
+		ExAxPower.Enable_Positive := TRUE;
+		ExAxPower.Enable_Negative := TRUE;
+		State := 1;
+		
+	1:	//check power
+		IF ExAxPower.Active THEN
+			State := 2;
+		END_IF
+		
+	2:
+		//CODE GOES HERE
+END_CASE
+
+ExAxPower(Axis := ExampleAxisName);
+```
+
+To control our axis, we will create two new BOOL variables, `start` and `stop`.
+We will write to `start` and `stop` to control the `MC_MoveVelocity` and `MC_Stop` function blocks respectively.
+I'm going to go ahead and flesh out the rest of the program now that all the nuances have been discussed to some degree.
+
+Variable Declaration:
+```
+PROGRAM MAIN
+VAR
+	ExampleAxisName : AXIS_REF;
+	ExAxPower 		: MC_Power;
+	ExAxStop 		: MC_Stop;
+	ExAxReset 		: MC_Reset;
+	ExAxMvVelo 		: MC_MoveVelocity;
+	State			: INT := 0;
+	
+	start			: BOOL;
+	stop			: BOOL;
+END_VAR
+```
+
+```
+//update local variables from hardware
+ExampleAxisName.ReadStatus();
+
+CASE State OF
+	0:	//power activation
+		ExAxPower.Enable := TRUE; 
+		ExAxPower.Enable_Positive := TRUE;
+		ExAxPower.Enable_Negative := TRUE;
+		State := 1;
+		
+	1:	//check power
+		IF ExAxPower.Active THEN
+			State := 2;
+		END_IF
+		
+	2:	//start motion
+		IF start THEN
+			ExAxMvVelo.Velocity := 50; //arbitrary number
+			ExAxMvVelo.Execute := TRUE;
+			State := 3;
+		END_IF
+		
+	3:	//check that motion is within range
+		IF ExAxMvVelo.InVelocity THEN
+			State := 4;
+		END_IF
+		
+	4: //stop motion
+		IF stop THEN
+			ExAxStop.Execute := TRUE;
+			State := 5;
+		END_IF
+		
+	5: //check for stop to finish
+		IF ExAxStop.Done THEN
+			State := 2;
+		END_IF
+END_CASE
+
+ExAxPower(Axis := ExampleAxisName);
+ExAxStop(Axis := ExampleAxisName);
+ExAxReset(Axis := ExampleAxisName);
+ExAxMvVelo(Axis := ExampleAxisName);
+```
 
 Linx:
 [1]:http://infosys.beckhoff.com/content/1033/tcplclib_tc2_mc2/70132363.html?id=14256
