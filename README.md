@@ -424,7 +424,11 @@ ExAxReset(Axis := ExampleAxisName);
 ExAxMvVelo(Axis := ExampleAxisName);
 ```
 
-Linx:
+####Thank You!
+Thank you for reading! I hope this guide has been useful, if you have any questions or requests feel free to email me at `eneva002@gmail.com`. I'd love to help if possible!
+
+Best of luck on your projects!
+
 [1]:http://infosys.beckhoff.com/content/1033/tcplclib_tc2_mc2/70132363.html?id=14256
 [2]:http://infosys.beckhoff.com/index_en.htm
 [3]:http://infosys.beckhoff.com/content/1033/tcplclib_tc2_mc2/70049419.html?id=14201
